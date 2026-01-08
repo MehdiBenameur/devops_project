@@ -1,0 +1,47 @@
+# Football Microservices - Helm Values
+
+# Global settings
+global:
+  namespace: football
+  imagePullPolicy: IfNotPresent
+
+# MongoDB
+mongodb:
+  enabled: true
+  image: mongo:6
+  storageSize: 1Gi
+
+# Player Service
+playerService:
+  replicaCount: 2
+  image: mehdiba11/player-service
+  tag: latest
+  port: 50051
+
+# Match Service
+matchService:
+  replicaCount: 2
+  image: mehdiba11/match-service
+  tag: latest
+  port: 50052
+
+# Score Service
+scoreService:
+  replicaCount: 2
+  image: mehdiba11/score-service
+  tag: latest
+  port: 50053
+
+# API Gateway
+apiGateway:
+  replicaCount: 2
+  image: mehdiba11/api-gateway
+  tag: latest
+  port: 4000
+  serviceType: NodePort
+  nodePort: 30000
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheusScrape: true

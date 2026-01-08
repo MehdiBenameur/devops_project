@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: football
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+      - name: api-gateway
+        image: mehdiba11/api-gateway:latest
+        ports:
+        - containerPort: 4000
+        env:
+        - name: PLAYER_SERVICE_HOST
+          value: "player-service.football.svc.cluster.local"
+        - name: PLAYER_GRPC_PORT
+          value: "50051"
+        - name: MATCH_SERVICE_HOST
+          value: "match-service.football.svc.cluster.local"
+        - name: MATCH_GRPC_PORT
+          value: "50052"
+        - name: SCORE_SERVICE_HOST
+          value: "score-service.football.svc.cluster.local"
+        - name: SCORE_GRPC_PORT
+          value: "50053"
+        - name: PORT
+          value: "4000"
+        # HEALTH CHECK HTTP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: football
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 4000
+    nodePort: 30000
+  selector:
+    app: api-gateway

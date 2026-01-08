@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: score-consumer
+  namespace: football
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: score-consumer
+  template:
+    metadata:
+      labels:
+        app: score-consumer
+    spec:
+      containers:
+      - name: score-consumer
+        image: mehdiba11/score-consumer:latest  # Tu dois créer/push cette image
+        env:
+        - name: KAFKA_BROKER
+          value: "kafka:9092"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

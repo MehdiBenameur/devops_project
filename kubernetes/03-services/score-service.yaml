@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: score-service
+  namespace: football
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: score-service
+  template:
+    metadata:
+      labels:
+        app: score-service
+    spec:
+      containers:
+      - name: score-service
+        image: mehdiba11/score-service:latest
+        ports:
+        - containerPort: 50053
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb.football.svc.cluster.local:27017/scoredb"
+        - name: GRPC_PORT
+          value: "50053"
+        - name : KAFKA_BROKER
+          value: "kafka:9092"
+        livenessProbe:
+          tcpSocket:
+            port: 50053
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 50053
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: score-service
+  namespace: football
+spec:
+  ports:
+  - port: 50053
+    targetPort: 50053
+    protocol: TCP
+  selector:
+    app: score-service

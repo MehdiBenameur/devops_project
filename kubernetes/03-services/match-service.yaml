@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: match-service
+  namespace: football
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: match-service
+  template:
+    metadata:
+      labels:
+        app: match-service
+    spec:
+      containers:
+      - name: match-service
+        image: mehdiba11/match-service:latest
+        ports:
+        - containerPort: 50052
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb.football.svc.cluster.local:27017/matchdb"
+        - name: GRPC_PORT
+          value: "50052"
+        # HEALTH CHECKS TCP
+        livenessProbe:
+          tcpSocket:
+            port: 50052
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 50052
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: match-service
+  namespace: football
+spec:
+  ports:
+  - port: 50052
+    targetPort: 50052
+    protocol: TCP
+  selector:
+    app: match-service

@@ -1,0 +1,114 @@
+# DevOps-Projet/docker-compose.yml
+version: '3.8'
+
+services:
+  # MongoDB - une instance pour tous les services
+  mongodb:
+    image: mongo:6
+    container_name: football-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: football
+
+  # Kafka (nécessaire pour les scores)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # Player Service
+  player-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.player
+    container_name: player-service
+    ports:
+      - "50051:50051"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/playerdb
+      - GRPC_PORT=50051
+
+  # Match Service
+  match-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.match
+    container_name: match-service
+    ports:
+      - "50052:50052"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/matchdb
+      - GRPC_PORT=50052
+
+  # Score Service
+  score-service:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.score
+    container_name: score-service
+    ports:
+      - "50053:50053"
+    depends_on:
+      - mongodb
+      - kafka
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/scoredb
+      - GRPC_PORT=50053
+      - KAFKA_BROKER=kafka:9092
+
+  # API Gateway (celui qu'on a déjà réussi)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: api-gateway
+    ports:
+      - "4000:4000"
+    depends_on:
+    - player-service
+    - match-service
+    - score-service
+    environment:
+    - PLAYER_SERVICE_HOST=player-service  # IMPORTANT: nom du service Docker
+    - PLAYER_GRPC_PORT=50051
+    - MATCH_SERVICE_HOST=match-service
+    - MATCH_GRPC_PORT=50052
+    - SCORE_SERVICE_HOST=score-service
+    - SCORE_GRPC_PORT=50053
+    - PORT=4000
+
+  # Score Consumer
+  score-consumer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.consumer
+    container_name: score-consumer
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BROKER=kafka:9092
+
+volumes:
+  mongodb_data:

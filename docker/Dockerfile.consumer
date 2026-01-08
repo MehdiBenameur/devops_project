@@ -1,0 +1,6 @@
+FROM node:18-alpine
+WORKDIR /app
+COPY apps/score-consumer/package*.json ./
+RUN npm ci --only=production
+COPY apps/score-consumer/ .
+CMD ["node", "src/consumer.js"]

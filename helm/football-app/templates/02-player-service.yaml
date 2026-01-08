@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: player-service
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: player-service
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- if .Values.monitoring.prometheusScrape }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.playerService.port }}"
+    {{- end }}
+spec:
+  replicas: {{ .Values.playerService.replicaCount }}
+  selector:
+    matchLabels:
+      app: player-service
+  template:
+    metadata:
+      labels:
+        app: player-service
+    spec:
+      containers:
+      - name: player-service
+        image: "{{ .Values.playerService.image }}:{{ .Values.playerService.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.playerService.port }}
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb:27017/playerdb"
+        - name: GRPC_PORT
+          value: "{{ .Values.playerService.port }}"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.playerService.port }}
+    targetPort: {{ .Values.playerService.port }}
+    name: grpc
+  selector:
+    app: player-service

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: player-service
+  namespace: football
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: player-service
+  template:
+    metadata:
+      labels:
+        app: player-service
+    spec:
+      containers:
+      - name: player-service
+        image: mehdiba11/player-service:latest
+        ports:
+        - containerPort: 50051
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb.football.svc.cluster.local:27017/playerdb"
+        - name: GRPC_PORT
+          value: "50051"
+        # HEALTH CHECKS TCP (SIMPLE)
+        livenessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player-service
+  namespace: football
+spec:
+  ports:
+  - port: 50051
+    targetPort: 50051
+    protocol: TCP
+  selector:
+    app: player-service

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: match-service
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: match-service
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- if .Values.monitoring.prometheusScrape }}
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.playerService.port }}"
+    {{- end }}
+spec:
+  replicas: {{ .Values.playerService.replicaCount }}
+  selector:
+    matchLabels:
+      app: match-service
+  template:
+    metadata:
+      labels:
+        app: match-service
+    spec:
+      containers:
+      - name: match-service
+        image: "{{ .Values.matchService.image }}:{{ .Values.matchService.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.matchService.port }}
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongodb:27017/matchdb"
+        - name: GRPC_PORT
+          value: "{{ .Values.matchService.port }}"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: match-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  ports:
+  - port: {{ .Values.matchService.port }}
+    targetPort: {{ .Values.matchService.port }}
+    name: grpc
+  selector:
+    app: match-service

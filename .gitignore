@@ -1,0 +1,13 @@
+node_modules/
+**/node_modules/
+.env
+.DS_Store
+*.log
+
+# Kubernetes / Helm caches (optionnel)
+*.tgz
+charts/
+Chart.lock
+
+# Jenkins local (si jamais)
+jenkins_home/

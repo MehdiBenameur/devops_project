@@ -1,0 +1,16 @@
+FROM node:18-alpine
+WORKDIR /app
+
+COPY apps/api-gateway/package*.json ./
+RUN npm ci --only=production
+COPY apps/api-gateway/ .
+
+# Corriger la casse si nécessaire
+RUN if [ -f "/app/src/grpc/client.js" ] && [ ! -f "/app/src/grpc/Client.js" ]; then \
+    cp /app/src/grpc/client.js /app/src/grpc/Client.js; \
+    fi
+
+EXPOSE 4000
+CMD ["node", "src/server.js"]
+
+RUN apk add --no-cache curl

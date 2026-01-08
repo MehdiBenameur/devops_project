@@ -1,0 +1,7 @@
+FROM node:18-alpine
+WORKDIR /app
+COPY apps/score-service/package*.json ./
+RUN npm ci --only=production
+COPY apps/score-service/ .
+EXPOSE 50053
+CMD ["node", "src/grpc/server.js"]
