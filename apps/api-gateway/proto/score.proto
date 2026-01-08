@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package score;
+
+message GetAllScoresRequest {}
+
+message GetAllScoresResponse {
+  repeated ScoreResponse scores = 1;
+}
+
+service ScoreService {
+  rpc AddScore (AddScoreRequest) returns (ScoreResponse);
+  rpc GetAllScores (GetAllScoresRequest) returns (GetAllScoresResponse);
+}
+
+
+message AddScoreRequest {
+  string matchId = 1;
+  string team = 2;
+  int32 minute = 3;
+  string playerId = 4; 
+}
+
+message ScoreResponse {
+  string id = 1;
+  string matchId = 2;
+  string team = 3;
+  int32 minute = 4;
+  string playerId = 5;
+}
+

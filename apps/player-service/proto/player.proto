@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package player;
+
+service PlayerService {
+  rpc GetPlayer (PlayerRequest) returns (PlayerResponse);
+  rpc CreatePlayer (CreatePlayerRequest) returns (PlayerResponse);
+}
+
+message PlayerRequest {
+  string id = 1;
+}
+
+message CreatePlayerRequest {
+  string name = 1;
+  string position = 2;
+  int32 age = 3;
+  string photoUrl = 4;
+}
+
+message PlayerResponse {
+  string id = 1;
+  string name = 2;
+  string position = 3;
+  int32 age = 4;
+  string photoUrl = 5;
+}

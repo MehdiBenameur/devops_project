@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package match;
+
+// ----------------------------
+// Service : MatchService
+// ----------------------------
+
+service MatchService {
+  rpc GetMatch (GetMatchRequest) returns (MatchResponse);
+  rpc CreateMatch (CreateMatchRequest) returns (MatchResponse);
+  rpc GetAllMatches (GetAllMatchesRequest) returns (GetAllMatchesResponse);
+}
+
+// ----------------------------
+// Messages : Requests
+// ----------------------------
+
+message GetMatchRequest {
+  string id = 1;
+}
+
+message CreateMatchRequest {
+  string homeTeam = 1;
+  string awayTeam = 2;
+  string date = 3;
+  string homeTeamLogoUrl = 4;
+  string awayTeamLogoUrl = 5;
+  repeated string players = 6;
+}
+
+message GetAllMatchesRequest {}
+
+// ----------------------------
+// Messages : Responses
+// ----------------------------
+
+message MatchResponse {
+  string id = 1;
+  string homeTeam = 2;
+  string awayTeam = 3;
+  string date = 4;
+  string homeTeamLogoUrl = 5;
+  string awayTeamLogoUrl = 6;
+  repeated string players = 7;
+}
+
+message GetAllMatchesResponse {
+  repeated MatchResponse matches = 1;
+}
